@@ -34,6 +34,9 @@ NET_FILE = "./Data/chicago-net.parquet"
 # EDGES_FILE = "./Data/illinois-edges.parquet"
 NODES_FILE = "./Data/nodes.parquet"
 EDGES_FILE = "./Data/edges.parquet"
+HEADERS = {
+    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4.1 Safari/605.1.15',
+}
 
 model = CatBoostClassifier()
 model.load_model(MODEL_FILE)
@@ -161,11 +164,13 @@ def main(page: ft.Page):
 
     def draw_map(orig, dest):
         orig = requests.get(
-            f'https://nominatim.openstreetmap.org/search.php?q="{orig}"&format=jsonv2'
+            f'https://nominatim.openstreetmap.org/search.php?q="{orig}"&format=jsonv2',
+            headers=HEADERS
         )
         sleep(2)
         dest = requests.get(
-            f'https://nominatim.openstreetmap.org/search.php?q="{dest}"&format=jsonv2'
+            f'https://nominatim.openstreetmap.org/search.php?q="{dest}"&format=jsonv2',
+            headers=HEADERS
         )
         if ('Access blocked' in orig.content.decode()) or ('Access blocked' in dest.content.decode()):
             raise ValueError('Access blocked by OSM Nominatim.')
