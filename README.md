@@ -9,7 +9,7 @@ If you just want to run the app follow these steps:
 - Create an environmet either with `virtualenv`, `venv` or `conda create`.
 - Activate the environment (with like `conda activate`)
 - Go to the root folder where `app.py` is located.
-- Install required packages with `pip install -r requirements`.
+- Install required packages with `pip install -r requirements.txt`.
 - Run app with `flet run app.py`.
 
 ## Pre-compiled binaries
