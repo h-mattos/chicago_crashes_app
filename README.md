@@ -12,7 +12,7 @@ If you just want to run the app follow these steps:
 - Run app with `flet run app.py`.
 
 ## Pre-compiled binaries
-We have precompiled the binaries for Windows(x64). This was done using the command in the __Compiling__ section. Nonetheless, we recomend creating a Python=3.10 environment and installing the requirements to run it in interactive mode to catch any warning or error.
+We have precompiled the binaries for Windows(x64). The `.exe` file should be put in the same folder as the Data folder. Since this is already pre-compiled, there is no need for any Python instalation or any other major library. This was done using the command in the __Compiling__ section. Nonetheless, we recomend creating a Python=3.10 environment and installing the requirements to run it in interactive mode to catch any warning or error.
 ## Compiling
 You can compile the code yourself with the folloing command.
 ```
