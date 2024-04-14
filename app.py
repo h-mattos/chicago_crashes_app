@@ -30,118 +30,86 @@ BBOX_PAD_PCT = 0.05
 MAP_FILE = "./map.png"
 MODEL_FILE = "./minimod.cbm"
 NET_FILE = "./Data/chicago-net.parquet"
-NODES_FILE = "./Data/illinois-nodes.parquet"
-EDGES_FILE = "./Data/illinois-edges.parquet"
+# NODES_FILE = "./Data/illinois-nodes.parquet"
+# EDGES_FILE = "./Data/illinois-edges.parquet"
+NODES_FILE = "./Data/nodes.parquet"
+EDGES_FILE = "./Data/edges.parquet"
 
 model = CatBoostClassifier()
 model.load_model(MODEL_FILE)
 net_data = pl.read_parquet(NET_FILE)
-nodes = pl.read_parquet(NODES_FILE)
-nodes = nodes.filter(
-    pl.col("lat")
-    .is_between(
-        min(net_data["lat1"].min(), net_data["lat2"].min()),
-        max(net_data["lat1"].max(), net_data["lat2"].max()),
-    )
-    .and_(
-        pl.col("lon").is_between(
-            min(net_data["lon1"].min(), net_data["lon2"].min()),
-            max(net_data["lon1"].max(), net_data["lon2"].max()),
-        )
-    )
-)
-nodes = nodes.with_row_index()
-edges = pl.read_parquet(EDGES_FILE)
-edges = edges.filter(pl.col("node_id").is_in(nodes["node_id"]))
-edges = (
-    edges.select(
-        [
-            pl.col("way_id"),
-            pl.col("way_id").shift(-1).alias("way_id2"),
-            pl.col("node_id").alias("node_id1"),
-            pl.col("node_id").shift(-1).alias("node_id2"),
-        ]
-    )
-    .filter(pl.col("way_id").eq(pl.col("way_id2")))
-    .drop("way_id2")
-)
-edges = edges.with_row_index("group")
-edges = edges.unique()
-# n_groups = np.inf
-# while edges['group'].n_unique()<n_groups:
-#     n_groups = edges['group'].n_unique()
-#     print(n_groups)
-#     edges = edges.join(
-#         edges.select([pl.col('group').alias('r_group'), pl.col('node_id2')]),
-#         left_on='node_id1',
-#         right_on='node_id2',
-#         how='left'
-#     ).select(
-#         pl.col('way_id'),
-#         pl.col('node_id1'),
-#         pl.col('node_id2'),
-#         pl.min_horizontal([
-#             pl.col('group'),
-#             pl.col('r_group').min().over('group'),
-#         ]).alias('group')
-#     ).unique()
-
-edges = edges.join(
-    nodes.rename({"index": "index1", "lat": "lat1", "lon": "lon1"}),
-    left_on="node_id1",
-    right_on="node_id",
-    how="left",
-).join(
-    nodes.rename({"index": "index2", "lat": "lat2", "lon": "lon2"}),
-    left_on="node_id2",
-    right_on="node_id",
-    how="left",
-)
-edges = edges.with_columns(
-    [
-        pl.col("lat1")
-        .sub(pl.col("lat2"))
-        .mul(LATLON_AR)
-        .pow(2)
-        .add(pl.col("lon1").sub(pl.col("lon2")).pow(2))
-        .sqrt()
-        .alias("dist")
-    ]
-)
-csr_graph = csr_matrix(
-    (edges["dist"].to_numpy(), (edges["index1"].to_numpy(), edges["index2"].to_numpy()))
-)
-n_components, labels = connected_components(csr_graph, directed=False)
-max_lab, counts = np.unique(labels, return_counts=True)
-max_lab = max_lab[np.argmax(counts)]
-edges = edges.filter(
-    pl.col("index1")
-    .is_in(np.argwhere(labels == max_lab).flatten())
-    .and_(pl.col("index2").is_in(np.argwhere(labels == max_lab).flatten()))
-)
-nodes = nodes.filter(pl.col("index").is_in(np.argwhere(labels == max_lab).flatten()))
-# graph_group = edges.group_by('group').len().select(pl.col('group').get(pl.col('len').arg_max()))[0,0]
-# edges = edges.filter(pl.col('group').eq(graph_group))
+# nodes = pl.read_parquet(NODES_FILE)
 # nodes = nodes.filter(
-#     pl.col('node_id').is_in(edges['node_id1'])
-#     .or_(pl.col('node_id').is_in(edges['node_id2']))
+#     pl.col("lat")
+#     .is_between(
+#         min(net_data["lat1"].min(), net_data["lat2"].min()),
+#         max(net_data["lat1"].max(), net_data["lat2"].max()),
+#     )
+#     .and_(
+#         pl.col("lon").is_between(
+#             min(net_data["lon1"].min(), net_data["lon2"].min()),
+#             max(net_data["lon1"].max(), net_data["lon2"].max()),
+#         )
+#     )
 # )
+# nodes = nodes.with_row_index()
+# edges = pl.read_parquet(EDGES_FILE)
+# edges = edges.filter(pl.col("node_id").is_in(nodes["node_id"]))
+# edges = (
+#     edges.select(
+#         [
+#             pl.col("way_id"),
+#             pl.col("way_id").shift(-1).alias("way_id2"),
+#             pl.col("node_id").alias("node_id1"),
+#             pl.col("node_id").shift(-1).alias("node_id2"),
+#         ]
+#     )
+#     .filter(pl.col("way_id").eq(pl.col("way_id2")))
+#     .drop("way_id2")
+# )
+# edges = edges.with_row_index("group")
+# edges = edges.unique()
 # edges = edges.join(
-#     nodes.rename({'index': 'index1', 'lat': 'lat1', 'lon': 'lon1'}),
-#     left_on='node_id1',
-#     right_on='node_id',
-#     how='left'
+#     nodes.rename({"index": "index1", "lat": "lat1", "lon": "lon1"}),
+#     left_on="node_id1",
+#     right_on="node_id",
+#     how="left",
 # ).join(
-#     nodes.rename({'index': 'index2', 'lat': 'lat2', 'lon': 'lon2'}),
-#     left_on='node_id2',
-#     right_on='node_id',
-#     how='left'
+#     nodes.rename({"index": "index2", "lat": "lat2", "lon": "lon2"}),
+#     left_on="node_id2",
+#     right_on="node_id",
+#     how="left",
 # )
-# edges = edges.with_columns([
-#     pl.col('lat1').sub(pl.col('lat2')).mul(LATLON_AR).pow(2).add(
-#         pl.col('lon1').sub(pl.col('lon2')).pow(2)
-#     ).sqrt().alias('dist')
-# ])
+# edges = edges.with_columns(
+#     [
+#         pl.col("lat1")
+#         .sub(pl.col("lat2"))
+#         .mul(LATLON_AR)
+#         .pow(2)
+#         .add(pl.col("lon1").sub(pl.col("lon2")).pow(2))
+#         .sqrt()
+#         .alias("dist")
+#     ]
+# )
+# csr_graph = csr_matrix(
+#     (edges["dist"].to_numpy(), (edges["index1"].to_numpy(), edges["index2"].to_numpy()))
+# )
+# n_components, labels = connected_components(csr_graph, directed=False)
+# max_lab, counts = np.unique(labels, return_counts=True)
+# max_lab = max_lab[np.argmax(counts)]
+# edges = edges.filter(
+#     pl.col("index1")
+#     .is_in(np.argwhere(labels == max_lab).flatten())
+#     .and_(pl.col("index2").is_in(np.argwhere(labels == max_lab).flatten()))
+# )
+# nodes = nodes.filter(pl.col("index").is_in(np.argwhere(labels == max_lab).flatten()))
+# edges.columns
+# edges.select(['index1', 'index2', 'dist']).write_parquet(EDGES_FILE, compression='zstd', compression_level=22)
+# nodes.write_parquet(NODES_FILE, compression='zstd', compression_level=22)
+
+edges = pl.read_parquet(EDGES_FILE)
+nodes = pl.read_parquet(NODES_FILE)
+
 csr_graph = csr_matrix(
     (edges["dist"].to_numpy(), (edges["index1"].to_numpy(), edges["index2"].to_numpy()))
 )
