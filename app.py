@@ -167,6 +167,8 @@ def main(page: ft.Page):
         dest = requests.get(
             f'https://nominatim.openstreetmap.org/search.php?q="{dest}"&format=jsonv2'
         )
+        if ('Access blocked' in orig.content.decode()) or ('Access blocked' in dest.content.decode()):
+            raise ValueError('Access blocked by OSM Nominatim.')
         orig_info = json.loads(orig.content.decode())[0]
         dest_info = json.loads(dest.content.decode())[0]
         lat1 = float(orig_info["lat"])
