@@ -7,6 +7,7 @@ If you just want to run the app follow these steps:
 
 - Clone the repo with `git clone`.
 - Create an environmet either with `virtualenv`, `venv` or `conda create`.
+- Activate the environment (with like `conda activate`)
 - Go to the root folder where `app.py` is located.
 - Install required packages with `pip install -r requirements`.
 - Run app with `flet run app.py`.
